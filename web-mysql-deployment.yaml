@@ -1,0 +1,76 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  annotations:
+    kompose.cmd: kompose convert
+    kompose.version: 1.26.1 (a9d05d509)
+  creationTimestamp: null
+  labels:
+    io.kompose.service: web-mysql
+  name: web-mysql
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      io.kompose.service: web-mysql
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      annotations:
+        kompose.cmd: kompose convert
+        kompose.version: 1.26.1 (a9d05d509)
+      creationTimestamp: null
+      labels:
+        io.kompose.network/web-scrapper-network: "true"
+        io.kompose.service: web-mysql
+    spec:
+      containers:
+        - env:
+            - name: MARIADB_DATABASE
+              value: web-scrapper
+            - name: MARIADB_PASSWORD
+              value: pass4web-scrapper
+            - name: MARIADB_ROOT_HOST
+              value: '%'
+            - name: MARIADB_ROOT_PASSWORD
+              value: pass4web-scrapper
+            - name: MARIADB_USER
+              value: web-scrapper
+            - name: MYSQL_DATABASE
+              value: web-scrapper
+            - name: MYSQL_PASSWORD
+              value: pass4web-scrapper
+            - name: MYSQL_ROOT_HOST
+              value: '%'
+            - name: MYSQL_ROOT_PASSWORD
+              value: pass4web-scrapper
+            - name: MYSQL_USER
+              value: web-scrapper
+          image: mariadb:latest
+          livenessProbe:
+            exec:
+              command:
+                - bash
+                - -c
+                - '[ -f /var/lib/mysql/init_done/db.opt ]'
+            failureThreshold: 10
+            initialDelaySeconds: 30
+            periodSeconds: 10
+            timeoutSeconds: 2
+          name: web-mysql
+          ports:
+            - containerPort: 3306
+          resources: {}
+          stdin: true
+          tty: true
+          volumeMounts:
+            - mountPath: /docker-entrypoint-initdb.d/init.sql
+              name: web-mysql-claim0
+      hostname: web-mysql
+      restartPolicy: Always
+      volumes:
+        - name: web-mysql-claim0
+          persistentVolumeClaim:
+            claimName: web-mysql-claim0
+status: {}
